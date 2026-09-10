@@ -1,3 +1,4 @@
+import BordersCore
 import Foundation
 import ServiceManagement
 
@@ -7,9 +8,7 @@ final class LaunchAtLoginManager {
     private(set) var errorMessage: String?
 
     var canManageLaunchAtLogin: Bool {
-        // Keep developer builds from registering a login item that points at
-        // a disposable .build bundle. The installed copy lives in ~/Applications.
-        Bundle.main.bundleURL.pathComponents.contains("Applications")
+        LaunchEligibility.canManageLaunchAtLogin(bundleURL: Bundle.main.bundleURL)
     }
 
     init() {
