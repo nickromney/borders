@@ -269,16 +269,34 @@ private final class BorderEngine {
     private func focusedFrame() -> (CGRect, pid_t)? {
         guard let pid = activeExternalAppPID() else { return nil }
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else { return nil }
-        for item in list {
+        let candidates = list.enumerated().compactMap { index, item -> WindowCandidate? in
             guard (item[kCGWindowOwnerPID as String] as? pid_t) == pid,
                   (item[kCGWindowLayer as String] as? Int) == 0,
+                  (item[kCGWindowAlpha as String] as? CGFloat ?? 1) > 0,
                   let bounds = item[kCGWindowBounds as String] as? [String: Any],
                   let x = bounds["X"] as? CGFloat, let y = bounds["Y"] as? CGFloat,
                   let w = bounds["Width"] as? CGFloat, let h = bounds["Height"] as? CGFloat,
-                  w > 60, h > 60 else { continue }
-            return (cocoaRect(CGRect(x: x, y: y, width: w, height: h)), pid)
+                  w > 60, h > 60 else { return nil }
+            return WindowCandidate(order: index, frame: cocoaRect(CGRect(x: x, y: y, width: w, height: h)))
         }
-        return nil
+
+        // CGWindowList is ordered front-to-back, so the first candidate is
+        // normally the focused window. That is not what we want here: browser
+        // pop-outs, find panels, and permission sheets can temporarily be first
+        // even though the user's main window is the useful focus target. Pick
+        // the largest visible layer-0 window and use front-to-back order only
+        // to break ties.
+        guard let primary = candidates.max(by: { lhs, rhs in
+            if lhs.area == rhs.area { return lhs.order > rhs.order }
+            return lhs.area < rhs.area
+        }) else { return nil }
+        return (primary.frame, pid)
+    }
+
+    private struct WindowCandidate {
+        let order: Int
+        let frame: CGRect
+        var area: CGFloat { frame.width * frame.height }
     }
 
     private func activeExternalAppPID() -> pid_t? {
@@ -328,7 +346,13 @@ private final class BorderEngine {
 private final class MenuController: NSObject, NSMenuDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let engine: BorderEngine
-    init(engine: BorderEngine) { self.engine = engine; super.init(); build() }
+    let launchManager: LaunchAtLoginManager
+    init(engine: BorderEngine) {
+        self.engine = engine
+        self.launchManager = LaunchAtLoginManager()
+        super.init()
+        build()
+    }
     private func build() {
         statusItem.button?.image = NSImage(systemSymbolName: "rectangle.dashed", accessibilityDescription: "Borders")
         statusItem.button?.toolTip = "Borders"
@@ -340,6 +364,13 @@ private final class MenuController: NSObject, NSMenuDelegate {
         menu.addItem(item("Main display", #selector(mainDisplay), checked: engine.display == .main))
         menu.addItem(item("Focused display", #selector(focusedDisplay), checked: engine.display == .focused))
         menu.addItem(item("All displays", #selector(allDisplays), checked: engine.display == .all))
+        if launchManager.canManageLaunchAtLogin {
+            menu.addItem(.separator())
+            menu.addItem(item("Open at Login", #selector(toggleLaunchAtLogin), checked: launchManager.isEnabled))
+            if launchManager.requiresApproval {
+                menu.addItem(item("Allow in Login Items…", #selector(openLoginItemsSettings)))
+            }
+        }
         menu.addItem(.separator())
         menu.addItem(item("Ring light app: \(engine.appBindingSummary)", nil))
         menu.addItem(item("Bind to \(engine.lastExternalAppSummary)", #selector(bindToCurrentApp)))
@@ -365,6 +396,11 @@ private final class MenuController: NSObject, NSMenuDelegate {
     @objc private func mainDisplay() { engine.setDisplay(.main); build() }
     @objc private func focusedDisplay() { engine.setDisplay(.focused); build() }
     @objc private func allDisplays() { engine.setDisplay(.all); build() }
+    @objc private func toggleLaunchAtLogin() {
+        launchManager.setEnabled(!launchManager.isEnabled)
+        build()
+    }
+    @objc private func openLoginItemsSettings() { launchManager.openLoginItemsSettings() }
     @objc private func bindToCurrentApp() { engine.bindToLastExternalApp(); build() }
     @objc private func clearAppBinding() { engine.clearAppBinding(); build() }
     @objc private func toggleNeon() { engine.setNeon(!engine.neon); build() }
