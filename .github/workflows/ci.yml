@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build strictly
+        run: swift build -Xswiftc -warnings-as-errors
+      - name: Unit tests
+        run: swift test
+      - name: Bundle the app
+        run: Scripts/build-app.sh Debug
+
+  quality:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Cyclomatic complexity ratchet
+        run: make complexity
+      - name: Mutation testing
+        run: Scripts/mutation-test.sh --execute --timeout 300
