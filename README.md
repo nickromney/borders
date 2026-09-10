@@ -18,6 +18,11 @@ removes local build and distribution artifacts.
 The app is deliberately an accessory app (`LSUIElement`) when bundled. A
 convenience bundle can be produced with `./Scripts/build-app.sh`.
 
+After `make install`, open the Borders menu and enable `Open at Login`. This
+uses macOS `SMAppService` and appears under System Settings → General → Login
+Items & Extensions. Developer builds keep this control hidden so a temporary
+`.build` bundle is not registered as a login item.
+
 The menu controls focused-window mode, ring light mode, display selection,
 width, brightness, colour, and an optional ring-light app binding. Live settings are stored in
 `~/Library/Preferences/com.nickromney.borders.plist`; the portable baseline
