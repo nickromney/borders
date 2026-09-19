@@ -28,6 +28,7 @@ final class MenuController: NSObject, NSMenuDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let engine: BorderEngine
     let launchManager: LaunchAtLoginManager
+    var keyLightsAction: ((NSStatusBarButton?) -> Void)?
 
     private static let widths = Array(stride(from: 8, through: 40, by: 8))
     private static let brightnessLevels = [0.25, 0.5, 0.75, 1.0]
@@ -46,6 +47,8 @@ final class MenuController: NSObject, NSMenuDelegate {
         let menu = NSMenu()
         menu.autoenablesItems = false
         addModeItems(to: menu)
+        menu.addItem(.separator())
+        menu.addItem(item("Key Lights…", #selector(openKeyLights)))
         addDisplayItems(to: menu)
         addLaunchItems(to: menu)
         addBindingItems(to: menu)
@@ -145,6 +148,7 @@ final class MenuController: NSObject, NSMenuDelegate {
         engine.setTint(value)
         build()
     }
+    @objc private func openKeyLights() { keyLightsAction?(statusItem.button) }
     @objc private func reload() { engine.reload(); build() }
     @objc private func openConfig() { NSWorkspace.shared.open(configURL) }
     @objc private func quit() { NSApplication.shared.terminate(nil) }

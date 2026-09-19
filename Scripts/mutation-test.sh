@@ -241,7 +241,16 @@ run_suite() {
   local suite=$!
   set +m
   local deadline=$(( SECONDS + TIMEOUT_SECS ))
-  while kill -0 "${suite}" 2>/dev/null; do
+  while :; do
+    # A completed background child can remain as a zombie until wait() reaps
+    # it. kill -0 still succeeds for that state, so inspect the process state
+    # as well or every fast test run looks like a timeout.
+    local process_state
+    process_state=$(ps -o stat= -p "${suite}" 2>/dev/null | tr -d '[:space:]')
+    if [ -z "${process_state}" ] || [[ "${process_state}" == Z* ]]; then
+      wait "${suite}"
+      return $?
+    fi
     if [ "${SECONDS}" -ge "${deadline}" ]; then
       kill -TERM -- "-${suite}" 2>/dev/null || kill -TERM "${suite}" 2>/dev/null || true
       sleep 2
