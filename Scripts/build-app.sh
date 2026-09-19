@@ -25,6 +25,11 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <key>CFBundleVersion</key><string>1</string>
 <key>CFBundleShortVersionString</key><string>1.0</string>
 <key>LSUIElement</key><true/>
+<key>NSLocalNetworkUsageDescription</key><string>Borders discovers and controls Key Lights on your local network. It does not send telemetry.</string>
+<key>NSCameraUsageDescription</key><string>Borders optionally samples the selected USB camera to provide local brightness feedback for Key Lights. It does not save or transmit frames.</string>
+<key>NSBonjourServices</key><array><string>_elg._tcp</string></array>
+<key>NSAppTransportSecurity</key>
+<dict><key>NSAllowsLocalNetworking</key><true/></dict>
 </dict></plist>
 PLIST
 echo "Built $APP"

@@ -9,7 +9,7 @@ DIST_APP := $(DIST_DIR)/$(APP_NAME).app
 INSTALLED_APP := $(HOME)/Applications/$(APP_NAME).app
 
 .DEFAULT_GOAL := default
-.PHONY: default help build dist install dev run test unit-test complexity mutation mutation-execute clean
+.PHONY: default help build dist install dev run test unit-test complexity mutation mutation-execute keylight-hardware-test clean
 
 COMPLEXITY_THRESHOLD ?= 7
 LIZARD ?= uvx lizard
@@ -25,12 +25,13 @@ help:
 		'make run\tAlias for make dev' \
 		'make build\tBuild the Debug app without installing it' \
 		'make dist\tBuild the Release app into dist/ for GitHub artifacts' \
-		'make install\tInstall the current Release app into ~/Applications' \
+		'make install\tInstall the current Release app, then clean build artifacts' \
 		'make test\tRun the unit tests and the strict Swift build' \
 		'make unit-test\tRun the unit tests only' \
 		'make complexity\tReport functions above the cyclomatic complexity ratchet' \
 		'make mutation\tPlan mutation testing for BordersCore without running it' \
 		'make mutation-execute\tRun the mutation cycle; nonzero exit when mutants survive' \
+		'make keylight-hardware-test\tRun the opt-in camera-assisted Key Light verification' \
 		'make clean\tRemove local build and distribution artifacts' \
 	| while IFS=$$'\t' read -r command description; do \
 		printf '  %-16s %s\n' "$$command" "$$description"; \
@@ -50,6 +51,7 @@ install: dist
 	@mkdir -p "$(HOME)/Applications"
 	@rm -rf "$(INSTALLED_APP)"
 	@ditto "$(DIST_APP)" "$(INSTALLED_APP)"
+	@$(MAKE) --no-print-directory clean
 	@echo "Installed $(INSTALLED_APP)"
 
 dev: build
@@ -100,6 +102,9 @@ mutation:
 
 mutation-execute:
 	@Scripts/mutation-test.sh $(MUTATION_ARGS) --execute
+
+keylight-hardware-test: build
+	@$(DEV_APP)/Contents/MacOS/$(EXECUTABLE_NAME) --keylight-hardware-test $(ARGS)
 
 clean:
 	@rm -rf "$(BUILD_DIR)" "$(DIST_DIR)"
