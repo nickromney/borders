@@ -11,6 +11,7 @@ final class KeyLightStatusItemController: NSObject, ObservableObject, NSPopoverD
     private let engine: BorderEngine
     let store: KeyLightStore
     let brightnessFeedback: KeyLightBrightnessFeedbackController
+    var keyLightsStateAction: ((Bool) -> Void)?
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let popover = NSPopover()
     private var observation: AnyCancellable?
@@ -122,9 +123,25 @@ final class KeyLightStatusItemController: NSObject, ObservableObject, NSPopoverD
     @objc private func openWiFiSettings() { store.openWiFiSettings() }
     @objc private func openPairingPage() { store.openPairingPage() }
 
+    func turnOnAllAtMinimum() {
+        store.turnOnAll(
+            at: KeyLightLimits.minimumVisibleBrightness,
+            temperature: KeyLightLimits.temperature.lowerBound
+        )
+        updateStatusItem()
+    }
+
+    func turnOffAll() {
+        store.turnOffAll()
+        updateStatusItem()
+    }
+
     @objc func toggleAllLights() {
         if areAllLightsOff {
-            store.turnOnAll()
+            store.turnOnAll(
+                at: KeyLightLimits.minimumVisibleBrightness,
+                temperature: KeyLightLimits.temperature.lowerBound
+            )
             if let mode = modeBeforeLightsOff {
                 engine.setMode(mode)
             }
@@ -146,6 +163,7 @@ final class KeyLightStatusItemController: NSObject, ObservableObject, NSPopoverD
             knownStates.count == store.devices.count &&
             knownStates.allSatisfy { !$0.isOn }
         areAllLightsOff = allLightsAreKnownAndOff
+        keyLightsStateAction?(allLightsAreKnownAndOff)
 
         let anyLightOn = knownStates.contains { $0.isOn }
         let symbol = anyLightOn ? "lightbulb.2.fill" : "lightbulb.2"

@@ -75,8 +75,9 @@ final class KeyLightStore: NSObject, ObservableObject {
 
     func setPower(_ isOn: Bool, for device: KeyLightDevice) {
         let current = states[device.id] ?? .sensibleDefault
-        let brightness = isOn ? minimumOnBrightness(current.brightness) : current.brightness
-        send(current.changing(isOn: isOn, brightness: brightness), to: device)
+        let brightness = isOn ? KeyLightLimits.minimumVisibleBrightness : current.brightness
+        let temperature = isOn ? KeyLightLimits.temperature.lowerBound : current.temperature
+        send(current.changing(isOn: isOn, brightness: brightness, temperature: temperature), to: device)
     }
 
     func setBrightness(_ brightness: Int, for device: KeyLightDevice) {
@@ -101,10 +102,25 @@ final class KeyLightStore: NSObject, ObservableObject {
         }
     }
 
-    func turnOnAll() {
+    func turnOnAll(at brightness: Int) {
+        let brightness = max(KeyLightLimits.minimumVisibleBrightness, brightness)
         devices.forEach { device in
             let current = states[device.id] ?? .sensibleDefault
-            send(current.changing(isOn: true, brightness: minimumOnBrightness(current.brightness)), to: device)
+            send(current.changing(isOn: true, brightness: brightness), to: device)
+        }
+    }
+
+    func turnOnAll(at brightness: Int, temperature: Int) {
+        devices.forEach { device in
+            let current = states[device.id] ?? .sensibleDefault
+            send(
+                current.changing(
+                    isOn: true,
+                    brightness: brightness,
+                    temperature: temperature
+                ),
+                to: device
+            )
         }
     }
 
@@ -123,10 +139,6 @@ final class KeyLightStore: NSObject, ObservableObject {
     func openPairingPage() {
         guard let url = URL(string: "http://\(KeyLightLimits.pairingAddress):\(KeyLightLimits.apiPort)/") else { return }
         NSWorkspace.shared.open(url)
-    }
-
-    private func minimumOnBrightness(_ brightness: Int) -> Int {
-        max(KeyLightLimits.minimumVisibleBrightness, brightness)
     }
 
     private func schedule(_ state: KeyLightState, to device: KeyLightDevice) {

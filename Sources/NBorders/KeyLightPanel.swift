@@ -20,12 +20,16 @@ struct KeyLightPanel: View {
 
             ScrollView {
                 VStack(spacing: 14) {
-                    EmergencyLightButton(
-                        isLightsOff: controller.areAllLightsOff,
-                        action: controller.toggleAllLights
-                    )
+                    WarmLightPresetGrid(store: store)
+
+                    LightPresetGrid(store: store)
 
                     SADLampButton(store: store)
+
+                    LightsOffButton(
+                        isPressed: controller.areAllLightsOff,
+                        action: controller.turnOffAll
+                    )
 
                     BrightnessFeedbackSection(controller: controller.brightnessFeedback)
 
@@ -92,11 +96,168 @@ struct KeyLightPanel: View {
     }
 }
 
-private struct BrightnessFeedbackSection: View {
-    @ObservedObject var controller: KeyLightBrightnessFeedbackController
+private struct LightPresetGrid: View {
+    @ObservedObject var store: KeyLightStore
+
+    private static let brightnessPresets = [15, 30, 50, 70]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: 10),
+                GridItem(.flexible(), spacing: 10)
+            ],
+            spacing: 10
+        ) {
+            ForEach(Self.brightnessPresets, id: \.self) { brightness in
+                LightPresetButton(
+                    store: store,
+                    brightness: brightness,
+                    title: "On - \(brightness)%"
+                ) {
+                    store.turnOnAll(at: brightness)
+                }
+            }
+        }
+    }
+}
+
+private struct WarmLightPresetGrid: View {
+    @ObservedObject var store: KeyLightStore
+
+    var body: some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: 10),
+                GridItem(.flexible(), spacing: 10)
+            ],
+            spacing: 10
+        ) {
+            LightPresetButton(
+                store: store,
+                brightness: 5,
+                title: "On - 5% (warm)"
+            ) {
+                store.turnOnAll(
+                    at: 5,
+                    temperature: KeyLightLimits.temperature.lowerBound
+                )
+            }
+
+            LightPresetButton(
+                store: store,
+                brightness: 10,
+                title: "On - 10% (warm)"
+            ) {
+                store.turnOnAll(
+                    at: 10,
+                    temperature: KeyLightLimits.temperature.lowerBound
+                )
+            }
+        }
+    }
+}
+
+private struct LightPresetButton: View {
+    @ObservedObject var store: KeyLightStore
+    let brightness: Int
+    let title: String
+    let action: () -> Void
+    @State private var isHovering = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: "lightbulb.2.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.green.opacity(isHovering ? 1 : 0.88))
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(store.devices.isEmpty)
+        .opacity(store.devices.isEmpty ? 0.42 : 1)
+        .onHover { isHovering = $0 }
+        .help("Turn all discovered Key Lights on at \(brightness)%")
+        .accessibilityLabel(title)
+    }
+}
+
+private struct BrightnessFeedbackSection: View {
+    @ObservedObject var controller: KeyLightBrightnessFeedbackController
+    @State private var isExpanded = false
+
+    var body: some View {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Use the DocCam camera to gently steer the light towards a measured brightness. This is relative luminance, not calibrated lux.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if controller.cameraDevices.isEmpty {
+                    HStack(spacing: 8) {
+                        Text("No USB camera found")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: 0)
+                        Button("Refresh", action: controller.refreshCameras)
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                    }
+                } else {
+                    if controller.cameraDevices.count > 1 {
+                        Picker("Camera", selection: Binding(
+                            get: { controller.selectedCameraID ?? "" },
+                            set: controller.selectCamera
+                        )) {
+                            ForEach(controller.cameraDevices) { camera in
+                                Text(camera.name).tag(camera.id)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .controlSize(.small)
+                    }
+
+                    FeedbackTargetSlider(controller: controller)
+
+                    Toggle("Lock camera exposure", isOn: Binding(
+                        get: { controller.configuration.locksCameraExposure },
+                        set: controller.setLocksCameraExposure
+                    ))
+                    .font(.system(size: 11))
+                    .toggleStyle(.checkbox)
+
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(controller.isEnabled ? Color.green : Color.secondary)
+                            .frame(width: 6, height: 6)
+                        Text(controller.status)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                        Spacer(minLength: 0)
+                        Button(action: controller.refreshCameras) {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .buttonStyle(.borderless)
+                        .help("Refresh camera list")
+                    }
+                }
+            }
+            .padding(.top, 10)
+        } label: {
             HStack(spacing: 8) {
                 Image(systemName: "camera.metering.center.weighted")
                     .foregroundStyle(.cyan)
@@ -111,63 +272,8 @@ private struct BrightnessFeedbackSection: View {
                 .toggleStyle(.switch)
                 .controlSize(.small)
             }
-
-            Text("Use the DocCam camera to gently steer the light towards a measured brightness. This is relative luminance, not calibrated lux.")
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if controller.cameraDevices.isEmpty {
-                HStack(spacing: 8) {
-                    Text("No USB camera found")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: 0)
-                    Button("Refresh", action: controller.refreshCameras)
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                }
-            } else {
-                if controller.cameraDevices.count > 1 {
-                    Picker("Camera", selection: Binding(
-                        get: { controller.selectedCameraID ?? "" },
-                        set: controller.selectCamera
-                    )) {
-                        ForEach(controller.cameraDevices) { camera in
-                            Text(camera.name).tag(camera.id)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .controlSize(.small)
-                }
-
-                FeedbackTargetSlider(controller: controller)
-
-                Toggle("Lock camera exposure", isOn: Binding(
-                    get: { controller.configuration.locksCameraExposure },
-                    set: controller.setLocksCameraExposure
-                ))
-                .font(.system(size: 11))
-                .toggleStyle(.checkbox)
-
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(controller.isEnabled ? Color.green : Color.secondary)
-                        .frame(width: 6, height: 6)
-                    Text(controller.status)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                    Spacer(minLength: 0)
-                    Button(action: controller.refreshCameras) {
-                        Image(systemName: "arrow.clockwise")
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Refresh camera list")
-                }
-            }
         }
-        .padding(14)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color.cyan.opacity(0.06))
@@ -222,7 +328,7 @@ private struct SADLampButton: View {
                     .font(.system(size: 15, weight: .semibold))
                     .frame(width: 22)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("SAD Lamp")
+                    Text("On - SAD Lamp")
                         .font(.system(size: 14, weight: .semibold))
                     Text("100% · \(KeyLightLimits.temperature.upperBound) K daylight")
                         .font(.system(size: 10))
@@ -381,26 +487,23 @@ private struct LightSlider: View {
     }
 }
 
-private struct EmergencyLightButton: View {
-    let isLightsOff: Bool
+private struct LightsOffButton: View {
+    let isPressed: Bool
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
-        let tint = isLightsOff ? Color.green : Color.red
-        let title = isLightsOff ? "Lights On" : "Lights Off"
-        let helper = isLightsOff ? "restore all" : "stop all"
-        let systemImage = isLightsOff ? "lightbulb.2.fill" : "lightbulb.slash.fill"
+        let tint = isPressed ? Color.red.opacity(0.45) : Color.red.opacity(0.88)
 
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: systemImage)
+                Image(systemName: isPressed ? "checkmark.circle.fill" : "lightbulb.slash.fill")
                     .font(.system(size: 16, weight: .semibold))
                     .frame(width: 22)
-                Text(title)
+                Text("Lights Off")
                     .font(.system(size: 15, weight: .semibold))
                 Spacer(minLength: 0)
-                Text(helper)
+                Text(isPressed ? "off" : "stop all")
                     .font(.system(size: 11, weight: .medium))
                     .opacity(0.82)
             }
@@ -409,14 +512,15 @@ private struct EmergencyLightButton: View {
             .frame(maxWidth: .infinity, minHeight: 64)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(tint.opacity(isHovering ? 1 : 0.88))
+                    .fill(isHovering && !isPressed ? tint.opacity(1) : tint)
             )
             .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
-        .help(isLightsOff ? "Turn all Key Lights back on and restore the Borders ring light" : "Turn all lights off, including the Borders ring light")
-        .accessibilityLabel(isLightsOff ? "Turn all lights on" : "Turn all lights off")
+        .help("Turn all discovered Key Lights off")
+        .accessibilityLabel("Turn all lights off")
+        .accessibilityValue(isPressed ? "Pressed" : "Not pressed")
     }
 }
 

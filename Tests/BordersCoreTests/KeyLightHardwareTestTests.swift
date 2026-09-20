@@ -26,7 +26,7 @@ final class KeyLightHardwareTestTests: XCTestCase {
         XCTAssertFalse(KeyLightHardwareTestPlan.command(for: .powerOff, basedOn: base).isOn)
         let minimum = KeyLightHardwareTestPlan.command(for: .minimumOn, basedOn: base)
         XCTAssertTrue(minimum.isOn)
-        XCTAssertEqual(minimum.brightness, 15)
+        XCTAssertEqual(minimum.brightness, 5)
         let midpoint = KeyLightHardwareTestPlan.command(for: .midpoint, basedOn: base)
         XCTAssertTrue(midpoint.isOn)
         XCTAssertEqual(midpoint.brightness, 50)
