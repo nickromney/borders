@@ -29,6 +29,10 @@ final class MenuController: NSObject, NSMenuDelegate {
     let engine: BorderEngine
     let launchManager: LaunchAtLoginManager
     var keyLightsAction: ((NSStatusBarButton?) -> Void)?
+    var keyLightsOnAction: (() -> Void)?
+    var keyLightsOffAction: (() -> Void)?
+    private var keyLightsAreOff = false
+    private var keyLightsOffItem: NSMenuItem?
 
     private static let widths = Array(stride(from: 8, through: 40, by: 8))
     private static let brightnessLevels = [0.25, 0.5, 0.75, 1.0]
@@ -46,9 +50,8 @@ final class MenuController: NSObject, NSMenuDelegate {
         statusItem.button?.toolTip = "Borders"
         let menu = NSMenu()
         menu.autoenablesItems = false
+        addKeyLightItems(to: menu)
         addModeItems(to: menu)
-        menu.addItem(.separator())
-        menu.addItem(item("Key Lights…", #selector(openKeyLights)))
         addDisplayItems(to: menu)
         addLaunchItems(to: menu)
         addBindingItems(to: menu)
@@ -59,6 +62,20 @@ final class MenuController: NSObject, NSMenuDelegate {
         menu.addItem(item("Open configuration", #selector(openConfig)))
         menu.addItem(item("Quit", #selector(quit)))
         statusItem.menu = menu
+    }
+
+    private func addKeyLightItems(to menu: NSMenu) {
+        menu.addItem(item("Key Lights On (comes on at 5% warm)", #selector(turnOnKeyLights)))
+        let offItem = item("Key Lights Off", #selector(turnOffKeyLights), checked: keyLightsAreOff)
+        menu.addItem(offItem)
+        keyLightsOffItem = offItem
+        menu.addItem(item("Key Lights options…", #selector(openKeyLights)))
+        menu.addItem(.separator())
+    }
+
+    func setKeyLightsAreOff(_ areOff: Bool) {
+        keyLightsAreOff = areOff
+        keyLightsOffItem?.state = areOff ? .on : .off
     }
 
     private func addModeItems(to menu: NSMenu) {
@@ -128,6 +145,8 @@ final class MenuController: NSObject, NSMenuDelegate {
     @objc private func mainDisplay() { engine.setDisplay(.main); build() }
     @objc private func focusedDisplay() { engine.setDisplay(.focused); build() }
     @objc private func allDisplays() { engine.setDisplay(.all); build() }
+    @objc private func turnOnKeyLights() { keyLightsOnAction?() }
+    @objc private func turnOffKeyLights() { keyLightsOffAction?() }
     @objc private func toggleLaunchAtLogin() { launchManager.setEnabled(!launchManager.isEnabled); build() }
     @objc private func openLoginItemsSettings() { launchManager.openLoginItemsSettings() }
     @objc private func bindToCurrentApp() { engine.bindToLastExternalApp(); build() }

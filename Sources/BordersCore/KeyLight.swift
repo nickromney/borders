@@ -5,7 +5,7 @@ public enum KeyLightLimits {
     public static let brightness: ClosedRange<Int> = 0...100
     /// The lowest useful output while the light is on. Zero is reserved for
     /// the power-off action because the hardware still emits light there.
-    public static let minimumVisibleBrightness = 15
+    public static let minimumVisibleBrightness = 5
     /// User-facing colour temperature, in Kelvin.
     public static let temperature: ClosedRange<Int> = 2_900...7_000
     /// The light protocol represents colour temperature as inverse Kelvin

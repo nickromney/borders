@@ -15,8 +15,17 @@ application.setActivationPolicy(.accessory)
 let engine = BorderEngine()
 let menuController = MenuController(engine: engine)
 let keyLightStatusItemController = KeyLightStatusItemController(engine: engine)
+keyLightStatusItemController.keyLightsStateAction = { [weak menuController] areOff in
+    menuController?.setKeyLightsAreOff(areOff)
+}
 menuController.keyLightsAction = { [weak keyLightStatusItemController] anchor in
     keyLightStatusItemController?.showPopoverFromBordersMenu(anchor: anchor)
+}
+menuController.keyLightsOnAction = { [weak keyLightStatusItemController] in
+    keyLightStatusItemController?.turnOnAllAtMinimum()
+}
+menuController.keyLightsOffAction = { [weak keyLightStatusItemController] in
+    keyLightStatusItemController?.turnOffAll()
 }
 let socketServer = SocketServer(engine: engine)
 socketServer.start()

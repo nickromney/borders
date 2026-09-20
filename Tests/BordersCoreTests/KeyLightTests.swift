@@ -43,7 +43,7 @@ final class KeyLightTests: XCTestCase {
         let state = KeyLightState(isOn: true, brightness: 60, temperature: 4_200)
 
         XCTAssertEqual(state.changingForUserBrightness(0), KeyLightState(isOn: false, brightness: 0, temperature: 4_200))
-        XCTAssertEqual(state.changingForUserBrightness(5), KeyLightState(isOn: true, brightness: 15, temperature: 4_200))
+        XCTAssertEqual(state.changingForUserBrightness(5), KeyLightState(isOn: true, brightness: 5, temperature: 4_200))
     }
 
     func testSADLampPresetStaysWithinPublishedLimits() {

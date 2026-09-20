@@ -121,18 +121,29 @@ Bonjour (`_elg._tcp`) for discovery and the light's local HTTP API on port
 requests.
 
 The popover provides power, brightness, and colour-temperature sliders for
-each discovered Key Light, plus two deliberate presets:
+each discovered Key Light, plus two warm low-light presets, four brightness
+presets, and a daylight preset:
 
-- `SAD Lamp` turns every discovered Key Light on at 100% and 7000 K, the
+- `On - 5% (warm)` and `On - 10% (warm)` turn every discovered
+  Key Light on at the selected brightness and 2900 K.
+- `On - 15%`, `On - 30%`, `On - 50%`, and `On - 70%`
+  turn every discovered Key Light on at the selected brightness while keeping
+  each light's current colour temperature.
+- `On - SAD Lamp` turns every discovered Key Light on at 100% and 7000 K, the
   coldest/full-output combination within the published Key Light range.
-- While a light is on, the visible brightness control runs from 15% to 100%.
+- The full-width `Lights Off` control turns off every discovered physical Key
+  Light and remains marked pressed while they are off; choose any `Lights On`
+  preset to turn them back on.
+- While a light is on, the visible brightness control runs from 5% to 100%.
   The hardware's API value of 0% still emits light on this unit, so a true
   zero-brightness request is treated as power off; use the power switch or
   `Lights Off` for that state.
-- `Lights Off` turns off every discovered physical Key Light and sets the
-  Borders overlay mode to `off`; the same button becomes `Lights On`, restores
-  the lights' previous brightness/temperature settings, and returns the prior
-  Borders mode when one was active.
+- Camera feedback is collapsed by default in the popover and can be expanded
+  when needed.
+
+The main Borders menu provides `Key Lights On (comes on at 5% warm)` and `Key Lights
+Off` shortcuts for the physical lights. The separate Key Lights status item's
+emergency context control remains overlay-aware.
 
 Pairing is repeatable rather than treated as a one-time installation step. The
 popover's pairing instructions never change the Mac's Wi-Fi automatically. To
@@ -154,7 +165,7 @@ These hardware steps correspond to Elgato's [Key Light Air reset guide](https://
 and its [manual local setup flow](https://help.elgato.com/hc/en-us/articles/4413643069197-Elgato-Control-Center-Manually-Pair-Wi-Fi-Product-Windows).
 
 If the light is already paired, open the existing Borders menu and choose
-`Key Lights…`; the separate bulb status item provides the same popover.
+`Key Lights options…`; the separate bulb status item provides the same popover.
 
 ### Camera brightness feedback
 
@@ -188,7 +199,7 @@ sequence:
 
 1. power off;
 2. issue the user-facing 0% command (which must also power off);
-3. 15% minimum on;
+3. 5% warm minimum on;
 4. 50% midpoint;
 5. 100% maximum on.
 
