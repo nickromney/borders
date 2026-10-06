@@ -1,0 +1,25 @@
+{
+  "before": {
+    "utc": "2026-10-06T11:41:39.988267+00:00",
+    "load": [
+      29.36474609375,
+      27.0283203125,
+      34.19287109375
+    ],
+    "cpu_user_percent": 40.31,
+    "cpu_system_percent": 21.52,
+    "cpu_idle_percent": 38.15
+  },
+  "after": {
+    "utc": "2026-10-06T11:47:19.395473+00:00",
+    "load": [
+      20.93994140625,
+      25.23974609375,
+      33.25439453125
+    ],
+    "cpu_user_percent": 44.9,
+    "cpu_system_percent": 16.9,
+    "cpu_idle_percent": 39.0
+  },
+  "scope": "source-only optimized synthetic child sampling; background load not controlled; no timing baseline"
+}

@@ -1,0 +1,1 @@
+Synthetic profile luminance-core: 5614000 operations, checksum 2807000.0000000005

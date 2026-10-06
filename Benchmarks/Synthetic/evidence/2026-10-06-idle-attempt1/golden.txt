@@ -1,0 +1,1 @@
+Synthetic golden outputs passed; no timing baseline collected.

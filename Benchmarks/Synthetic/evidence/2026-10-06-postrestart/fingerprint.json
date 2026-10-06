@@ -1,0 +1,33 @@
+{
+  "utc": "2026-10-06T11:55:36.850213+00:00",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "source_sha": "3091f64712544e16920519b891549d7497982532",
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx26.0",
+  "hardware": [
+    "Mac16,10",
+    "10",
+    "10",
+    "17179869184"
+  ],
+  "power": "Now drawing from 'AC Power'",
+  "filesystem": "/",
+  "build": "swiftc -O -g; symbols unstripped; no app runtime or hardware adapters",
+  "source_sha256": {
+    "Sources/BordersCore/WindowSelection.swift": "339b38663de99b303f618bdc9a41fd3c6ff7f75e3f15e99538e7568fe846689c",
+    "Sources/BordersCore/Colour.swift": "d23cbf4ef987cf54b5d6243c4092d024285db0aca63b6c34b868b8c987fc01af",
+    "Sources/BordersCore/AppBinding.swift": "4ce38d8f72467bdbba906e5d95408886c1f4799d662596a19a44749c3d3c2a6e",
+    "Sources/BordersCore/OverlayStyle.swift": "5e949620738391461f3cd714f3a83823127d43b821632265243efcffb916afeb",
+    "Sources/BordersCore/KeyLight.swift": "0ce999e6fb0507dad13d32b1116a66b06b37798f5ec2fcf70e2bae6fa9485cfd",
+    "Sources/BordersCore/Command.swift": "bee3ce36b46419f9498c8c78a95c8ff55b1fbed59139002b74ddd22a0e6acc39",
+    "Sources/BordersCore/Settings.swift": "c0f96b084e2dbff1dcf6659e852be7ee256e5cee0cbc53b385dc11842c2e5677",
+    "Sources/BordersCore/SocketChannel.swift": "500878ad011adf2450e384643bd3f35e48768ffa666f0accee2158544bc245ce",
+    "Sources/BordersCore/KeyLightHardwareTest.swift": "98a09dad9d4e8137bff73debe23d482ce6a20c6df5a75b4ac1f7801f00d02c11",
+    "Sources/BordersCore/LaunchEligibility.swift": "760cf47186c5ee414f3714a21d695e3ab206fc7a0b02aab9d502ebc8fd92d054",
+    "Sources/BordersCore/BrightnessFeedback.swift": "860040709d91357d522a2da9077da4a08908cc35ddc33eee6730bbf57937c98f",
+    "Sources/BordersCore/Configuration.swift": "c82bc8dc7b17c834562064e8f426e2f2ffa9218dbe826b3e00a47d69d946ea46",
+    "Sources/BordersCore/CameraCaptureFormat.swift": "94121c92d7539b63c1e49b707e47897424d34e99cb791d6d4174b5ec5d1a0951",
+    "Benchmarks/Synthetic/main.swift": "540aab22f2a209d056eac085d4aa8a2ab641f664ccf31377b0567c261d3f2ced",
+    "Benchmarks/Synthetic/collect.py": "e4ed9e1df29f45a54520a80eacd256dd71d53fd597b79f949504e514b03a38f3",
+    ".build/synthetic-profile": "0ae16f2dc943fb0d288384b830b8f827081376ab98087ebad74369de98c7a222"
+  }
+}

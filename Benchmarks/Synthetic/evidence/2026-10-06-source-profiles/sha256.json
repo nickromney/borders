@@ -1,0 +1,13 @@
+{
+  "golden.txt": "c13fc63205b1ca8c1ccfa86fbbf18fc032a8468aa6ffa93d6c54a56a9c409deb",
+  "focused-selection-profile-proof.txt": "2d44783a122dd8f7a89c40f12e39480d926ae171cd4cdcc4d4d69c5b0a01b0d5",
+  "focused-selection-sampler.json": "b5bfb6f3324b36174e8605f1eb7bb17137be209de885f64f0f8d3a36e9948078",
+  "fingerprint.json": "2420fc954e5fada083798b121df6ed40e37439bbf93c23ec1975b7c68d011990",
+  "README.md": "ba5b3b5857d5c12a2aadbaf8942525a9ee2330a64d9aa42b20ce8fb995b904f0",
+  "luminance-core-sampler.json": "c517ec998e1d16529d86610eca35a90c8df3f52a2006b376772f1568767ff2d9",
+  "main.swift.profile-source.txt": "b091b550385e6fda609bbe5c0dbcc04a9542c927edaa1218d6c577b5465f654e",
+  "luminance-core-profile-proof.txt": "c1ebbc40438d60bf9ab9d159230a84db75a0b69bdc5b13f26684c6fa96316d86",
+  "luminance-core.sample.txt": "7f8806f25a3ac4ed871d688170a734577a604e3c672fdca40e6c7674906f4d57",
+  "profile-host.json": "6072b32950c5c202d787ef28a799cea0515f3862644a27da8b1c68d57d31b4a7",
+  "focused-selection.sample.txt": "185bbd70daf7ab622658f93892fcf1ee10e8071b17b4150f3f840f9880070cc8"
+}
