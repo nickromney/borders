@@ -61,7 +61,7 @@ for scenario in scenarios {
         let elapsed = (ProcessInfo.processInfo.systemUptime - start) * 1000
         if batch >= 3 { runs.append(elapsed) }
     }
-    precondition(abs(checksum - 23000 * (scenario == "focused-selection" ? 999 : 0.5)) < 1e-8)
+    precondition(checksum == 23000 * (scenario == "focused-selection" ? 999 : 0.5))
     var usage = rusage()
     precondition(getrusage(RUSAGE_SELF, &usage) == 0)
     let output: [String: Any] = ["peak_rss_mib": Double(usage.ru_maxrss) / 1048576, "scenario": scenario, "iterations_per_run": 1000,
