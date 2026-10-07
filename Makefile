@@ -117,5 +117,5 @@ test-core:
 test-domain:
 	swift test --filter KeyLightTests
 
-check-local: test complexity mutation-execute
+check-local: test complexity
 	git diff --check

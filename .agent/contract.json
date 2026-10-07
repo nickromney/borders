@@ -5,7 +5,7 @@
   "actions": [
     {
       "id": "verify",
-      "intent": "Run the complete local publication gate for borders; fixture/build scope only.",
+      "intent": "Run mandatory local publication tests/build and CCN7; mutation sweeps are explicit opt-in actions per owner instruction.",
       "argv": [
         "lefthook",
         "run",
@@ -106,6 +106,36 @@
       ],
       "requires": [],
       "recovery": "Repair the control-channel owner; a timeout is inconclusive app state and requires fresh observation before another command."
+    },
+    {
+      "id": "verify-quality",
+      "intent": "Explicit full mutation/quality gate, retaining original operators, exclusions, thresholds and timeouts; never runs on an ordinary push.",
+      "argv": [
+        "make",
+        "mutation-execute"
+      ],
+      "effects": [
+        "read",
+        "local_write",
+        "process",
+        "network"
+      ],
+      "acceptance_scope": "build",
+      "inputs": [
+        "lefthook.yml",
+        "Makefile",
+        "Package.swift",
+        "Sources/BordersCore/KeyLight.swift",
+        "Tests/BordersCoreTests/KeyLightTests.swift",
+        "pyproject.toml",
+        "uv.lock",
+        ".github/dependabot.yml",
+        "Sources",
+        "Tests",
+        "Scripts"
+      ],
+      "requires": [],
+      "recovery": "Repair genuine failures or disclose incomplete evidence; never lower mutation thresholds or infer full acceptance from a partial sweep."
     }
   ],
   "learning": [
