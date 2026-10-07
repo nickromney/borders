@@ -72,3 +72,13 @@ Acceptance: owner paths and document links resolve; current instructions
 match inspected source; catalog hashes bind this context to the reviewed
 bytes. This is documentation/control navigation acceptance. Product runtime
 checks retain their own scope and are not certified by this pass.
+
+## Executable local contract — 7 October 2026
+
+`make test-domain` enters KeyLightTests and proves testUserBrightnessZeroMeansPowerOffAndSmallOnValuesUseTheVisibleMinimum. `make test-core` runs the full SwiftPM fixture suite. `make check-local` is the mandatory Lefthook pre-push gate and includes the existing full quality/build checks without installing or launching the resident app. Hardware, permissions and hosted app checks remain separate explicit actions.
+
+Zero requests power-off. Positive values below5 clamp to5; higher values remain requested. Test both sides of the minimum: the previous exact5 assertion allowed max→min to survive and silently reduced every higher request.
+
+The source-bound action/learning descriptor is [.agent/contract.json](../.agent/contract.json). A changed source or test invalidates the applicable lesson; re-run the named domain proof before retaining new guidance. Dependency resolution uses a seven-day cooldown for active update managers and uv tooling; existing locked app dependencies are retained.
+
+Control-channel verification: `swift test --filter "SocketTimeoutTests|CommandChannelTests"` uses owned temporary Unix sockets. A timed-out or empty reply returns a typed refusal and a nonzero CLI result; it does not establish app state or command success. Refresh state after resolving the unresponsive peer. `make check-local` also exercises this regression and retains the full mutation gate.

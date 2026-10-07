@@ -59,5 +59,11 @@ func runClient(_ command: String, path: String = socketPath) -> Int32 {
     case .notRunning, .unusablePath:
         FileHandle.standardError.write(Data("borders: app is not running\n".utf8))
         return 1
+    case .timedOut:
+        FileHandle.standardError.write(Data("borders: app did not respond before the socket timeout\n".utf8))
+        return 1
+    case .noResponse, .communicationFailed:
+        FileHandle.standardError.write(Data("borders: app did not acknowledge the command\n".utf8))
+        return 1
     }
 }

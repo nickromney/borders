@@ -49,6 +49,9 @@ public enum SocketMessage {
     /// Apply the read and write timeout to one socket.
     @discardableResult
     public static func applyTimeout(to descriptor: Int32, seconds: Double = timeoutSeconds) -> Bool {
+        // A positive value smaller than one microsecond truncates to zero,
+        // which disables the kernel timeout instead of shortening it.
+        guard seconds.isFinite, seconds >= 0.000001, seconds < Double(Int.max) else { return false }
         let whole = Int(seconds)
         var value = timeval(tv_sec: whole, tv_usec: Int32((seconds - Double(whole)) * 1_000_000))
         let size = socklen_t(MemoryLayout<timeval>.size)
@@ -142,6 +145,9 @@ public enum ChannelReply: Equatable {
     case reply(String)
     case notRunning
     case unusablePath
+    case timedOut
+    case noResponse
+    case communicationFailed
 }
 
 /// Send one command over the control socket and read the reply.
@@ -156,9 +162,21 @@ public func sendCommand(_ command: String, path: String,
         Darwin.connect(descriptor, pointer, length)
     }
     guard connected == 0 else { return .notRunning }
-    SocketMessage.applyTimeout(to: descriptor, seconds: timeoutSeconds)
-    _ = command.withCString { Darwin.write(descriptor, $0, strlen($0)) }
+    guard SocketMessage.applyTimeout(to: descriptor, seconds: timeoutSeconds) else {
+        return .communicationFailed
+    }
+    return exchange(command, descriptor: descriptor)
+}
+
+private func exchange(_ command: String, descriptor: Int32) -> ChannelReply {
+    let written = command.withCString { Darwin.write(descriptor, $0, strlen($0)) }
+    guard written == command.utf8.count else { return .communicationFailed }
     var buffer = [UInt8](repeating: 0, count: SocketMessage.bufferSize)
     let count = Darwin.read(descriptor, &buffer, buffer.count)
+    if count < 0 {
+        // Darwin defines EWOULDBLOCK as EAGAIN.
+        return errno == EAGAIN ? .timedOut : .communicationFailed
+    }
+    guard count > 0 else { return .noResponse }
     return .reply(SocketMessage.decode(buffer, count: count))
 }

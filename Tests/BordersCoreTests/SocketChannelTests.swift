@@ -101,6 +101,13 @@ final class CommandChannelTests: XCTestCase {
         channel.stop()
         channel.stop()
     }
+
+    func testAnEmptyReplyDoesNotReportSuccessfulAcknowledgement() {
+        let channel = CommandChannel(path: path) { _ in "" }
+        XCTAssertTrue(channel.start())
+        defer { channel.stop() }
+        XCTAssertEqual(sendCommand("status", path: path), .noResponse)
+    }
 }
 
 final class SocketTimeoutTests: XCTestCase {
@@ -119,6 +126,24 @@ final class SocketTimeoutTests: XCTestCase {
         XCTAssertFalse(SocketMessage.applyTimeout(to: -1))
     }
 
+    func testInvalidTimeoutsAreRefused() {
+        let descriptor = socket(AF_UNIX, SOCK_STREAM, 0)
+        defer { Darwin.close(descriptor) }
+        for seconds in [0, -1, 0.0000001, Double.nan, Double.infinity, Double(Int.max)] {
+            XCTAssertFalse(SocketMessage.applyTimeout(to: descriptor, seconds: seconds))
+        }
+    }
+
+    func testOneMicrosecondDoesNotDisableTheKernelTimeout() {
+        let descriptor = socket(AF_UNIX, SOCK_STREAM, 0)
+        defer { Darwin.close(descriptor) }
+        XCTAssertTrue(SocketMessage.applyTimeout(to: descriptor, seconds: 0.000001))
+        var value = timeval()
+        var size = socklen_t(MemoryLayout<timeval>.size)
+        XCTAssertEqual(getsockopt(descriptor, SOL_SOCKET, SO_RCVTIMEO, &value, &size), 0)
+        XCTAssertTrue(value.tv_sec > 0 || value.tv_usec > 0)
+    }
+
     func testAServerThatNeverAnswersDoesNotHangTheClient() throws {
         let path = FileManager.default.temporaryDirectory
             .appendingPathComponent("borders-silent-\(UUID().uuidString.prefix(8)).sock").path
@@ -134,9 +159,13 @@ final class SocketTimeoutTests: XCTestCase {
             try? FileManager.default.removeItem(atPath: path)
         }
         // Nothing ever accepts or replies; the client must still return.
-        let started = Date()
-        let reply = sendCommand("status", path: path, timeoutSeconds: 0.2)
-        XCTAssertEqual(reply, .reply(""))
-        XCTAssertLessThan(Date().timeIntervalSince(started), 10)
+        let returned = expectation(description: "silent peer returns a typed timeout")
+        DispatchQueue.global().async {
+            let started = Date()
+            XCTAssertEqual(sendCommand("status", path: path, timeoutSeconds: 0.2), .timedOut)
+            XCTAssertLessThan(Date().timeIntervalSince(started), 1)
+            returned.fulfill()
+        }
+        wait(for: [returned], timeout: 1)
     }
 }
