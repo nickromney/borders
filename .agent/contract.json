@@ -173,7 +173,7 @@
       "basis": [
         {
           "path": "Sources/BordersCore/SocketChannel.swift",
-          "sha256": "b73f8713e9130e4b3c9ff4479436f4fd401f79a3f926651b40f32eeae892d01a"
+          "sha256": "8dcf87a2e0c14b88fc1d0b5856c9258308695c89b5db342f785db1134facb30b"
         },
         {
           "path": "Sources/NBorders/SocketServer.swift",
@@ -181,7 +181,7 @@
         },
         {
           "path": "Tests/BordersCoreTests/SocketChannelTests.swift",
-          "sha256": "3d54477898cebea4d00aedddb983be7288bd9ad5061b296f95930601c50b0324"
+          "sha256": "961773170cc3c22be8611de1ed47d485b1a6d8b1fbce6fd7b51eb369edb0fcff"
         }
       ]
     }

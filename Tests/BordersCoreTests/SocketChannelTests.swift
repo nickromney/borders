@@ -102,6 +102,28 @@ final class CommandChannelTests: XCTestCase {
         channel.stop()
     }
 
+    func testStoppedChannelsCannotAnswerReplacementChannels() {
+        for generation in 0..<1000 {
+            let channel = CommandChannel(path: path) { "generation:\(generation):\($0)" }
+            XCTAssertTrue(channel.start())
+            let reply = sendCommand("status", path: path)
+            channel.stop()
+            guard reply == .reply("generation:\(generation):status") else {
+                XCTFail("Replacement generation \(generation) received \(reply)")
+                return
+            }
+            XCTAssertEqual(sendCommand("status", path: path), .notRunning)
+            let empty = CommandChannel(path: path) { _ in "" }
+            XCTAssertTrue(empty.start())
+            let acknowledgement = sendCommand("status", path: path)
+            empty.stop()
+            guard acknowledgement == .noResponse else {
+                XCTFail("Empty generation \(generation) received \(acknowledgement)")
+                return
+            }
+        }
+    }
+
     func testAnEmptyReplyDoesNotReportSuccessfulAcknowledgement() {
         let channel = CommandChannel(path: path) { _ in "" }
         XCTAssertTrue(channel.start())

@@ -71,7 +71,7 @@ public enum SocketMessage {
 public final class CommandChannel {
     public let path: String
     private let handler: (String) -> String
-    private var descriptor: Int32 = -1
+    private var listener: DispatchSourceRead?
 
     public init(path: String, handler: @escaping (String) -> String) {
         self.path = path
@@ -86,6 +86,7 @@ public final class CommandChannel {
     /// an unusable descriptor and burning a core for the life of the app.
     @discardableResult
     public func start() -> Bool {
+        guard listener == nil else { return false }
         Darwin.unlink(path)
         guard var address = SocketAddress.make(path: path) else { return false }
         let socketDescriptor = socket(AF_UNIX, SOCK_STREAM, 0)
@@ -96,42 +97,43 @@ public final class CommandChannel {
         let bound = SocketAddress.withSockaddr(&address) { pointer, length in
             Darwin.bind(socketDescriptor, pointer, length)
         }
-        guard bound == 0, Darwin.listen(socketDescriptor, 4) == 0 else {
+        guard bound == 0, Darwin.listen(socketDescriptor, 4) == 0,
+              fcntl(socketDescriptor, F_SETFL, O_NONBLOCK) == 0 else {
             Darwin.close(socketDescriptor)
             return false
         }
-        descriptor = socketDescriptor
-        DispatchQueue.global(qos: .utility).async { [weak self] in self?.acceptLoop(socketDescriptor) }
+        let source = DispatchSource.makeReadSource(fileDescriptor: socketDescriptor,
+                                                   queue: .global(qos: .utility))
+        source.setEventHandler { [handler] in
+            Self.acceptReady(socketDescriptor, handler: handler)
+        }
+        // Cancellation drains any active handler before closing. The old
+        // source can never accept on a descriptor recycled for a new listener.
+        source.setCancelHandler { Darwin.close(socketDescriptor) }
+        listener = source
+        source.resume()
         return true
     }
 
     public func stop() {
-        // mutation:skip - a live descriptor is never 0 here, so a boundary
-        // change cannot alter behaviour.
-        guard descriptor >= 0 else { return } // mutation:skip
-        Darwin.close(descriptor)
-        descriptor = -1
+        guard let source = listener else { return }
+        listener = nil
+        source.cancel()
         Darwin.unlink(path)
     }
 
-    private func acceptLoop(_ listening: Int32) {
-        while true {
-            let client = Darwin.accept(listening, nil, nil)
-            // mutation:skip - as above, accept() never hands back 0 here.
-            if client >= 0 { // mutation:skip
-                serve(client)
-                continue
-            }
-            // EINTR and EAGAIN are transient; anything else means the listening
-            // socket is closed and retrying would spin forever.
-            // mutation:skip - a test cannot force accept() to fail with EINTR
-            // rather than with a closed descriptor.
-            guard errno == EINTR || errno == EAGAIN else { return } // mutation:skip
-        }
+    private static func acceptReady(_ listening: Int32, handler: (String) -> String) {
+        let client = Darwin.accept(listening, nil, nil)
+        guard client >= 0 else { return }
+        serve(client, handler: handler)
     }
 
-    private func serve(_ client: Int32) {
+    private static func serve(_ client: Int32, handler: (String) -> String) {
         defer { Darwin.close(client) }
+        // Darwin inherits O_NONBLOCK from the listener. Requests still use the
+        // bounded blocking read, so do not treat data not yet sent as empty.
+        let flags = fcntl(client, F_GETFL)
+        guard flags >= 0, fcntl(client, F_SETFL, flags & ~O_NONBLOCK) == 0 else { return }
         SocketMessage.applyTimeout(to: client)
         var buffer = [UInt8](repeating: 0, count: SocketMessage.bufferSize)
         let count = Darwin.read(client, &buffer, buffer.count)
