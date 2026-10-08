@@ -1,12 +1,11 @@
 # Borders menu-bar and ring-light plan
 
-Status: implemented foundation; current ownership and remaining work are described below. Reviewed against local source on 2026-10-06.
+Status: implemented foundation.
 
 ## Repository boundary
 
 The menu-bar app is now this standalone project. It owns the Swift source,
-SwiftPM build, app bundle metadata, tests, signing, and releases. The repository
-boundary below records the implemented split from dotfiles.
+SwiftPM build, app bundle metadata, tests, signing, and releases.
 
 The dotfiles repository retains only any machine integration layer that may be
 needed later. It does not own app bundles, UI code, or build artifacts.
@@ -56,10 +55,7 @@ window mode remains the simple configured yellow border.
 Display changes rebuild overlays. Safe-area insets keep the ring clear of a
 notch/camera cutout, and overlays are excluded from screen capture.
 
-## Historical implementation order
-
-Steps 1–5 describe the implemented foundation. Dotfiles integration remains a
-separate machine-integration decision; no runtime refactor is implied by this list.
+## Implementation order
 
 1. Standalone SwiftPM project and focused-ring source.
 2. Proper menu-bar app target and CLI compatibility.
@@ -67,14 +63,3 @@ separate machine-integration decision; no runtime refactor is implied by this li
 4. Ring-light geometry for single, multi-display, and notched displays.
 5. Width, brightness, and colour controls.
 6. Dotfiles integration after the install contract is stable.
-
-## Workflow and evidence contract
-
-Reviewed 6 October 2026. Commands below select existing verification seams;
-attended hardware and native lifecycle claims retain their own evidence requirements.
-
-| Decision | Owner | Smallest verification | Evidence and effects |
-| --- | --- | --- | --- |
-| Overlay decisions | Sources/BordersCore; Tests/BordersCoreTests | swift test | Pure geometry/configuration proof |
-| Running overlay settings | Sources/NBorders/SocketServer.swift | borders status | Observed app settings; not physical light state |
-| Physical Key Light behavior | Sources/NBorders/KeyLightStore.swift | Explicit hardware test only | Attended device proof; do not infer illumination from request success |

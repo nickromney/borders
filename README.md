@@ -222,7 +222,3 @@ is only the local Key Light/AVFoundation adapter.
 
 See [docs/plans/n-borders-menubar-ring-light.md](docs/plans/n-borders-menubar-ring-light.md)
 for the repository boundary and implementation plan copied from `n-dotfiles`.
-
-## Agent operation and plan status
-
-For the current ownership, action-effect and evidence contracts, use [the operating model](docs/agent-system.md). Its implemented plan covers agent navigation and documentation. Feature proposals below remain proposals until their own acceptance evidence is recorded; dated observations retain their original scope.
