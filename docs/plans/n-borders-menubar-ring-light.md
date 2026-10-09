@@ -1,12 +1,11 @@
 # Borders menu-bar and ring-light plan
 
-Status: proposed
+Status: implemented foundation.
 
 ## Repository boundary
 
-The menu-bar app should become its own small project rather than growing inside
-this dotfiles repository. The standalone project can own the Swift source,
-Xcode/SwiftPM build, app bundle metadata, tests, signing, and releases.
+The menu-bar app is now this standalone project. It owns the Swift source,
+SwiftPM build, app bundle metadata, tests, signing, and releases.
 
 The dotfiles repository retains only any machine integration layer that may be
 needed later. It does not own app bundles, UI code, or build artifacts.
@@ -42,7 +41,7 @@ configured stroke width, and bypasses focused-window fullscreen suppression.
 The default width is 24 display points with an 8–40 point range. Brightness
 drives a bright core plus layered coloured bloom, matching the visual intent
 of the Windows reference instead of relying on a single translucent stroke.
-There is no camera capture or permission.
+Overlay rendering needs no camera capture or permission. The separate, implemented Key Light feedback feature is opt-in, requests camera permission, samples frames locally, and bounds brightness adjustments through BordersCore policy.
 
 The display choices are main display, the display containing the active window,
 or all displays. Each display gets its own overlay, which keeps dual-monitor

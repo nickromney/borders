@@ -2,3 +2,5 @@
 .run/
 Borders.app/
 dist/
+
+.venv/

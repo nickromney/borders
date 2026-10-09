@@ -12,7 +12,7 @@ INSTALLED_APP := $(HOME)/Applications/$(APP_NAME).app
 .PHONY: default help build dist install dev run test unit-test complexity mutation mutation-execute keylight-hardware-test clean
 
 COMPLEXITY_THRESHOLD ?= 7
-LIZARD ?= uvx lizard
+LIZARD ?= uv run --locked lizard
 
 default:
 	@$(MAKE) --no-print-directory help
@@ -90,7 +90,7 @@ unit-test:
 # it, not a prompt to raise the number.
 complexity:
 	@mkdir -p .run
-	@$(LIZARD) -l swift Sources -C $(COMPLEXITY_THRESHOLD) --warnings_only | tee .run/complexity.txt
+	@set -o pipefail; $(LIZARD) -l swift Sources -C $(COMPLEXITY_THRESHOLD) --warnings_only | tee .run/complexity.txt
 	@if [ -s .run/complexity.txt ]; then \
 		echo "Functions above CCN $(COMPLEXITY_THRESHOLD). Split them or justify the change." >&2; \
 		exit 1; \
@@ -101,10 +101,21 @@ mutation:
 	@Scripts/mutation-test.sh $(MUTATION_ARGS)
 
 mutation-execute:
-	@Scripts/mutation-test.sh $(MUTATION_ARGS) --execute
+	@Scripts/mutation-test.sh $(MUTATION_ARGS) --execute --timeout 300
 
 keylight-hardware-test: build
 	@$(DEV_APP)/Contents/MacOS/$(EXECUTABLE_NAME) --keylight-hardware-test $(ARGS)
 
 clean:
 	@rm -rf "$(BUILD_DIR)" "$(DIST_DIR)"
+
+# Fixture/build checks never install or launch the resident application.
+.PHONY: test-core test-domain check-local
+test-core:
+	swift test
+
+test-domain:
+	swift test --filter KeyLightTests
+
+check-local: test complexity
+	git diff --check
