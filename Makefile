@@ -119,3 +119,6 @@ test-domain:
 
 check-local: test complexity
 	git diff --check
+
+VERIFY_SKILL := skills/verify-borders
+include $(VERIFY_SKILL)/verify.mk
