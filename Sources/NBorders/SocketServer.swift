@@ -51,7 +51,7 @@ final class SocketServer {
 }
 
 /// Send one command to a running app and print its reply.
-func runClient(_ command: String, path: String = socketPath) -> Int32 {
+func runClient(_ command: String, path: String = ProcessInfo.processInfo.environment["BORDERS_SOCKET_PATH"] ?? socketPath) -> Int32 {
     switch sendCommand(command, path: path) {
     case .reply(let reply):
         print(reply)

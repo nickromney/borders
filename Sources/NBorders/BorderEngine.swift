@@ -3,7 +3,7 @@ import BordersCore
 import CoreGraphics
 import Foundation
 
-let socketPath = "/tmp/borders.sock"
+let socketPath = ProcessInfo.processInfo.environment["BORDERS_SOCKET_PATH"] ?? "/tmp/borders.sock"
 let configURL = FileManager.default.homeDirectoryForCurrentUser
     .appendingPathComponent(".config/borders/borders.conf")
 
