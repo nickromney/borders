@@ -60,8 +60,22 @@ cmd_doctor() {
 }
 cmd_cleanup() {
   if [ -f "$PIDFILE" ]; then
-    app_env "$APP" quit > "$EVIDENCE/quit.txt" 2>&1 || true
-    vk_stop_group "$PIDFILE"
+    app_env "$APP" quit > "$EVIDENCE/quit.txt" || {
+      vk_fail "quit command failed; see $EVIDENCE/quit.txt"
+      if [ "${VK_VERIFY_ACTIVE:-0}" -eq 1 ]; then vk_stop_group "$PIDFILE"; fi
+      return 1
+    }
+    local i=0
+    while [ "$i" -lt 10 ]; do
+      if ! vk_group_alive "$PIDFILE"; then break; fi
+      sleep 1
+      i=$((i + 1))
+    done
+    if vk_group_alive "$PIDFILE"; then
+      vk_fail "Borders did not exit after quit within 10 seconds"
+      if [ "${VK_VERIFY_ACTIVE:-0}" -eq 1 ]; then vk_stop_group "$PIDFILE"; fi
+      return 1
+    fi
   fi
   rm -rf "${STATE:?}"
   rmdir "$VK_BASE_DIR/$VK_RUN_ID" 2>/dev/null || true
@@ -69,10 +83,12 @@ cmd_cleanup() {
   vk_say "stopped this run's app and removed state; evidence kept at $EVIDENCE"
 }
 vk_verify_recipes() {
-  app_env "$APP" status > "$EVIDENCE/status-cli.txt"
-  vk_expect_contains "$EVIDENCE/status-cli.txt" "mode=off"
+  app_env "$APP" on > "$EVIDENCE/on-cli.txt"
+  app_env "$APP" status > "$EVIDENCE/status-on.txt"
+  vk_expect_contains "$EVIDENCE/status-on.txt" "mode=focused"
   app_env "$APP" off > "$EVIDENCE/off-cli.txt"
-  vk_expect_contains "$EVIDENCE/off-cli.txt" "mode=off"
+  app_env "$APP" status > "$EVIDENCE/status-off.txt"
+  vk_expect_contains "$EVIDENCE/status-off.txt" "mode=off"
   cmd_doctor
 }
 vk_dispatch() {
