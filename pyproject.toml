@@ -2,7 +2,7 @@
 name = "borders-local-tooling"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["lizard==1.24.0"]
+dependencies = ["lizard==1.24.1"]
 
 [tool.uv]
 package = false
