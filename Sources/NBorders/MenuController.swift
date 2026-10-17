@@ -33,6 +33,10 @@ final class MenuController: NSObject, NSMenuDelegate {
     var keyLightsOffAction: (() -> Void)?
     private var keyLightsAreOff = false
     private var keyLightsOffItem: NSMenuItem?
+    /// One menu for the life of the controller, repopulated on open. Building
+    /// a fresh `NSMenu` per rebuild cannot be done from `menuNeedsUpdate`,
+    /// which is handed the menu it must fill.
+    private let menu = NSMenu()
 
     private static let widths = Array(stride(from: 8, through: 40, by: 8))
     private static let brightnessLevels = [0.25, 0.5, 0.75, 1.0]
@@ -41,6 +45,19 @@ final class MenuController: NSObject, NSMenuDelegate {
         self.engine = engine
         self.launchManager = LaunchAtLoginManager()
         super.init()
+        menu.autoenablesItems = false
+        // The class has always declared `NSMenuDelegate` but never set itself
+        // as the delegate, so the menu was only ever rebuilt by acting on it.
+        // State that changes from anywhere else — an app being activated, a
+        // socket command — left stale titles and checkmarks behind.
+        menu.delegate = self
+        statusItem.menu = menu
+        build()
+    }
+
+    /// Rebuild on every open, so the menu shows the engine's current state
+    /// rather than its state as of the last time the menu itself was used.
+    func menuNeedsUpdate(_ menu: NSMenu) {
         build()
     }
 
@@ -48,8 +65,7 @@ final class MenuController: NSObject, NSMenuDelegate {
         statusItem.button?.image = NSImage(systemSymbolName: "rectangle.dashed",
                                            accessibilityDescription: "Borders")
         statusItem.button?.toolTip = "Borders"
-        let menu = NSMenu()
-        menu.autoenablesItems = false
+        menu.removeAllItems()
         addKeyLightItems(to: menu)
         addModeItems(to: menu)
         addDisplayItems(to: menu)
@@ -61,7 +77,6 @@ final class MenuController: NSObject, NSMenuDelegate {
         menu.addItem(item("Reload configuration", #selector(reload)))
         menu.addItem(item("Open configuration", #selector(openConfig)))
         menu.addItem(item("Quit", #selector(quit)))
-        statusItem.menu = menu
     }
 
     private func addKeyLightItems(to menu: NSMenu) {
