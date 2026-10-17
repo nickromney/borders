@@ -52,7 +52,14 @@ final class BorderEngine {
         NotificationCenter.default.addObserver(
             self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
-        NotificationCenter.default.addObserver(
+        // NSWorkspace notifications are posted to the workspace's own centre,
+        // never to the default one. Registered on the default centre this
+        // observer never fired at all: ring light mode hid that, because the
+        // render timer re-reads the frontmost app every tick, but
+        // `rememberExternalApplication` is only called from here and once at
+        // launch — so "bind to this app" bound to whatever happened to be in
+        // front when borders started.
+        NSWorkspace.shared.notificationCenter.addObserver(
             self, selector: #selector(applicationActivated(_:)),
             name: NSWorkspace.didActivateApplicationNotification, object: nil)
     }
